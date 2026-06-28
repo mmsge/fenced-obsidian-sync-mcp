@@ -4,6 +4,12 @@ Wraps the official ``obsidian-headless`` client (``ob sync --continuous``) as a
 child process so the local vault directory mirrors Obsidian Sync. This module
 does not reimplement syncing; it only supervises the official client.
 
+The client must already be authenticated and the vault linked — a one-time
+``ob login`` followed by ``ob sync-setup --vault "<name>" --path <vault_dir>``,
+whose state persists in the client's config directory. ``ob sync --continuous``
+then operates on the configured vault from within ``vault_dir`` (its working
+directory); it takes no ``--vault`` flag.
+
 In ``mode: local`` this module is never used — there is no ``obsidian-headless``
 dependency and no subprocess.
 """
@@ -39,9 +45,11 @@ class SyncManager:
             )
         if self.running:
             return
-        # The headless client syncs the remote vault into the local vault_dir.
+        # `ob sync --continuous` operates on the vault configured by `ob
+        # sync-setup`, identified by its working directory — not a --vault flag.
         self._proc = subprocess.Popen(
-            [self._ob, "sync", "--continuous", "--vault", str(self._config.vault_dir)],
+            [self._ob, "sync", "--continuous"],
+            cwd=str(self._config.vault_dir),
             stdout=sys.stderr,  # keep stdout clean for the stdio MCP channel
             stderr=sys.stderr,
         )

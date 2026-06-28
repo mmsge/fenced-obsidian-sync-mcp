@@ -7,6 +7,7 @@ capability's tool is never registered by the server.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -129,7 +130,20 @@ def _transport(raw: object) -> TransportConfig:
     tls_raw = raw.get("tls") or {}
     auth_raw = raw.get("auth") or {}
     tls = TLSConfig(certfile=tls_raw.get("certfile"), keyfile=tls_raw.get("keyfile"))
-    auth = AuthConfig(bearer_token=auth_raw.get("bearer_token"))
+
+    # The token may be given inline (`bearer_token`) or, preferably for
+    # deployment, sourced from an environment variable (`bearer_token_env`) so
+    # the secret never lives in the config file. Inline wins if both are set.
+    token = auth_raw.get("bearer_token")
+    token_env = auth_raw.get("bearer_token_env")
+    if not token and token_env:
+        token = os.environ.get(token_env)
+        if not token:
+            raise ConfigError(
+                f"transport.auth.bearer_token_env points at ${token_env}, "
+                f"which is unset or empty"
+            )
+    auth = AuthConfig(bearer_token=token)
 
     return TransportConfig(
         type=ttype,
