@@ -63,3 +63,23 @@ def test_http_requires_bearer_token(vault: Path):
             capabilities={"list": {"enabled": True, "allow": ["**"]}},
             transport={"type": "http"},
         )
+
+
+def test_bearer_token_from_env(vault: Path, monkeypatch):
+    monkeypatch.setenv("FOSM_TOKEN", "s3cret-from-env")
+    config = make_config(
+        vault,
+        capabilities={"list": {"enabled": True, "allow": ["**"]}},
+        transport={"type": "http", "auth": {"bearer_token_env": "FOSM_TOKEN"}},
+    )
+    assert config.transport.auth.bearer_token == "s3cret-from-env"
+
+
+def test_bearer_token_env_unset_is_rejected(vault: Path, monkeypatch):
+    monkeypatch.delenv("FOSM_MISSING", raising=False)
+    with pytest.raises(cfg.ConfigError):
+        make_config(
+            vault,
+            capabilities={"list": {"enabled": True, "allow": ["**"]}},
+            transport={"type": "http", "auth": {"bearer_token_env": "FOSM_MISSING"}},
+        )

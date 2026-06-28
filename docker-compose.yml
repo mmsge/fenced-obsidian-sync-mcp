@@ -1,0 +1,38 @@
+# Deployment for mode: sync behind the central Caddy (see the hetzner-server
+# repo). This compose runs ONLY this service — Caddy terminates TLS and reverse
+# proxies to it; there is no bundled Caddy here.
+#
+# One-time setup before `up` (persists in the ob_config/ob_data volumes):
+#   make ob-login                       # interactive: email, password, MFA
+#   make ob-setup VAULT="My Vault"      # links the remote vault into /vault
+#
+# Then: cp examples/config.docker-sync.yaml config.yaml  (edit globs/vault name)
+#       echo "FOSM_BEARER_TOKEN=$(openssl rand -hex 32)" >> .env
+#       make deploy
+services:
+  fenced-obsidian-sync-mcp:
+    build: .
+    image: fenced-obsidian-sync-mcp
+    restart: unless-stopped
+    init: true                       # reap the `ob` child + clean signal handling
+    # sync mode runs node (`ob`) + python; more headroom than the 256m norm.
+    mem_limit: 512m
+    # Bound to 0.0.0.0 (not 127.0.0.1) so the Caddy container can reach it via
+    # the Docker bridge gateway at 172.18.0.1:4012.
+    ports:
+      - "0.0.0.0:4012:4012"
+    environment:
+      # The bearer token is injected as a secret, never written to the config.
+      FOSM_BEARER_TOKEN: ${FOSM_BEARER_TOKEN:?set FOSM_BEARER_TOKEN in .env}
+    volumes:
+      - ./config.yaml:/config/config.yaml:ro   # the fence policy (gitignored)
+      - vault:/vault                           # the synced vault directory
+      - ob_config:/root/.config                # obsidian-headless login state
+      - ob_data:/root/.local/share             # keyring sqlite fallback
+      - logs:/var/log/fosm                     # audit log (kept out of the vault)
+
+volumes:
+  vault:
+  ob_config:
+  ob_data:
+  logs:

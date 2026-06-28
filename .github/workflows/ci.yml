@@ -34,3 +34,10 @@ jobs:
 
       - name: Test (pytest)
         run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (verifies the sync-mode Dockerfile)
+        run: docker build -t fenced-obsidian-sync-mcp:ci .

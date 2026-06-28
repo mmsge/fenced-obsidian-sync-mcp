@@ -151,6 +151,33 @@ audit:
   path: /var/log/fenced-obsidian-sync-mcp/audit.jsonl   # omit -> stderr
 ```
 
+## Deploy with Docker (mode: sync)
+
+The repo ships a `Dockerfile`, `docker-compose.yml`, and `Makefile` for running
+`mode: sync` behind a reverse proxy (e.g. the central Caddy on a Hetzner box).
+The image bundles both the Python server and the official `obsidian-headless`
+(`ob`) client; TLS is terminated at the proxy, so the container speaks plain
+HTTP on `0.0.0.0:4012` and the bearer token comes from `$FOSM_BEARER_TOKEN`.
+
+```sh
+# 1. one-time obsidian-headless auth (persists in named volumes)
+make ob-login                      # interactive: email, password, MFA
+make ob-setup VAULT="My Vault"     # links the remote vault into /vault
+
+# 2. config + secret
+cp examples/config.docker-sync.yaml config.yaml   # edit vault name + globs
+cp .env.example .env && echo "FOSM_BEARER_TOKEN=$(openssl rand -hex 32)" > .env
+
+# 3. run
+make deploy                        # docker compose up -d --build
+```
+
+`bearer_token_env: FOSM_BEARER_TOKEN` in the config sources the token from the
+container environment, keeping the secret out of the config file and git. Point
+your reverse proxy at `172.18.0.1:4012` (the Docker bridge gateway) and, because
+MCP streamable-http uses SSE, disable proxy buffering — in Caddy:
+`reverse_proxy 172.18.0.1:4012 { flush_interval -1 }`.
+
 ## Security invariants
 
 These are guaranteed and tested (`tests/`):
