@@ -1,0 +1,13 @@
+# Posture: CREATE-ONLY.
+# The agent may drop new notes into Inbox/ and nothing else. It cannot read,
+# list, update, or delete — those tools are never registered. Collisions get a
+# numeric suffix instead of failing, and never overwrite an existing note.
+mode: local
+vault: /path/to/your/vault
+collision: suffix          # fail | suffix
+
+capabilities:
+  create:
+    enabled: true
+    allow: ["Inbox/**"]
+  # everything else omitted => disabled

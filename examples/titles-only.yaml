@@ -1,0 +1,13 @@
+# Posture: TITLES-ONLY (link suggester).
+# The agent can see which notes EXIST (paths/titles) to suggest links, but no
+# registered tool can open their contents. `read` and `read_metadata` are off,
+# so there is no surface to read bodies — proven by their absence from the tool
+# list. Private/ and Journal/ are hidden entirely (deny wins over allow).
+mode: local
+vault: /path/to/your/vault
+
+capabilities:
+  list:
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**", "Journal/**"]

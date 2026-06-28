@@ -1,0 +1,36 @@
+# Posture: read-only researcher over Obsidian Sync, served remotely over HTTP.
+# `mode: sync` supervises the official obsidian-headless client (`ob sync
+# --continuous`) so the local directory mirrors your vault. Served over HTTP with
+# a bearer token; TLS is terminated here or by a reverse proxy (e.g. Caddy).
+mode: sync
+vault: "My Vault"                 # remote Obsidian Sync vault name
+vault_dir: /var/lib/obsidian/my-vault   # local dir the headless client syncs into
+collision: suffix
+
+capabilities:
+  list:
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+  read:
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+  search:                         # search implies read; enable read too (above)
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+
+audit:
+  enabled: true
+  path: /var/log/fenced-obsidian-sync-mcp/audit.jsonl
+
+transport:
+  type: http
+  host: 0.0.0.0
+  port: 8080
+  auth:
+    bearer_token: "change-me-to-a-long-random-secret"
+  tls:                            # omit to terminate TLS at a reverse proxy
+    certfile: /etc/ssl/certs/server.crt
+    keyfile: /etc/ssl/private/server.key
