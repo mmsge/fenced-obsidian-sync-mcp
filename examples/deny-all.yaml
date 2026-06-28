@@ -1,0 +1,6 @@
+# Posture: DENY-ALL ("dark vault").
+# The server runs but exposes NO tools. Every capability is off by default, so an
+# empty `capabilities` block is a fully fenced, do-nothing server.
+mode: local
+vault: /path/to/your/vault
+capabilities: {}
