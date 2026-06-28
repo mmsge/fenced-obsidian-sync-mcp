@@ -1,0 +1,1 @@
+# fenced-obsidian-sync-mcp
