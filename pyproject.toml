@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fenced-obsidian-sync-mcp"
+version = "0.1.0"
+description = "A deny-by-default, finely fenced MCP server over an Obsidian vault."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "mmsge" }]
+keywords = ["mcp", "obsidian", "security", "sandbox"]
+dependencies = [
+    "mcp>=1.2.0",
+    "PyYAML>=6.0",
+    "wcmatch>=8.5",
+]
+
+[project.optional-dependencies]
+http = ["uvicorn>=0.30", "starlette>=0.37"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.6"]
+
+[project.scripts]
+fenced-obsidian-sync-mcp = "fenced_obsidian_sync_mcp.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fenced_obsidian_sync_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
