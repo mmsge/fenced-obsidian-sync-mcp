@@ -1,0 +1,38 @@
+# Server config for the Docker (mode: sync) deployment.
+# Copy to ./config.yaml next to docker-compose.yml and edit for your vault.
+# The bearer token is NOT here — it comes from $FOSM_BEARER_TOKEN (see .env).
+mode: sync
+vault: "My Vault"          # remote Obsidian Sync vault name (from `ob sync-list-remote`)
+vault_dir: /vault          # local dir inside the container; matches the `vault` volume
+collision: suffix
+
+# Read-only researcher posture, Private/ hidden. Adjust to taste.
+# ⚠️ In sync mode, enabling update/delete/move propagates to EVERY device.
+capabilities:
+  list:
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+  read:
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+  search:                  # implies read (enabled above)
+    enabled: true
+    allow: ["**/*.md"]
+    deny:  ["Private/**"]
+  create:
+    enabled: true
+    allow: ["Inbox/**"]
+
+audit:
+  enabled: true
+  path: /var/log/fosm/audit.jsonl   # the `logs` volume — NOT inside the synced vault
+
+transport:
+  type: http
+  host: 0.0.0.0
+  port: 4012
+  auth:
+    bearer_token_env: FOSM_BEARER_TOKEN   # sourced from the container env / .env
+  # No tls block: the central Caddy terminates TLS and proxies plain HTTP here.
